@@ -22,9 +22,43 @@
 #include "config.h"
 
 /**
+ * 解析桥接命令中的 PUB 参数（topic + payload）
+ *
+ * 纯逻辑函数，不依赖硬件，可用于单元测试。
+ *
+ * @param line     命令行（已去除 "PUB " 前缀）
+ * @param topic    输出 topic 缓冲区
+ * @param topic_max topic 缓冲区最大长度
+ * @param payload 输出 payload 缓冲区
+ * @param payload_max payload 缓冲区最大长度
+ * @return int     0=成功, 1=无空格分隔, 2=topic超长, 3=payload超长
+ */
+inline int bridge_parse_pub(const char *line, char *topic, size_t topic_max,
+                           char *payload, size_t payload_max) {
+    const char *sp = strchr(line, ' ');
+    if (!sp || sp == line) return 1;  // 无 payload 部分（仅 topic 也允许）
+
+    size_t topic_len = (size_t)(sp - line);
+    if (topic_len == 0) return 1;
+
+    if (topic_len >= topic_max) return 2;  // topic 超长
+    memcpy(topic, line, topic_len);
+    topic[topic_len] = '\0';
+
+    const char *pl = sp + 1;
+    size_t pl_len = strlen(pl);
+    if (pl_len >= payload_max) return 3;  // payload 超长
+    memcpy(payload, pl, pl_len);
+    payload[pl_len] = '\0';
+
+    return 0;
+}
+
+/**
  * 处理一条 STM32 桥接命令（已在 loop() 中检测到 ">>" 前缀后调用）
  *
  * @note 此函数会阻塞读取串口直到收到换行符
+ *       读取长度受 BRIDGE_MAX_LINE_LEN 限制
  */
 inline void handle_bridge_command() {
     String line = Serial.readStringUntil('\n');
@@ -35,21 +69,36 @@ inline void handle_bridge_command() {
         return;
     }
 
+    // 长度保护：超过限制直接拒绝
+    if (line.length() > BRIDGE_MAX_LINE_LEN) {
+        Serial.println(F("<<ERR too long"));
+        return;
+    }
+
     if (line.startsWith("PUB ")) {
         // 解析 "PUB <topic> <payload>"
-        int sp = line.indexOf(' ', 4);
-        if (sp > 4 && g_mqtt_connected) {
-            String topic = line.substring(4, sp);
-            String payload = line.substring(sp + 1);
-            g_mqtt_client.publish(topic.c_str(), payload.c_str());
-            Serial.printf("<<OK PUB %s\n", topic.c_str());
+        if (!g_mqtt_connected) {
+            Serial.println(F("<<ERR no mqtt"));
+            return;
+        }
+        char topic[BRIDGE_MAX_TOPIC_LEN];
+        char payload[BRIDGE_MAX_PAYLOAD_LEN];
+        int err = bridge_parse_pub(line.c_str() + 4, topic, sizeof(topic),
+                                    payload, sizeof(payload));
+        if (err == 0) {
+            g_mqtt_client.publish(topic, payload);
+            Serial.printf("<<OK PUB %s\n", topic);
         } else {
-            Serial.println(F("<<ERR"));
+            Serial.printf("<<ERR parse:%d\n", err);
         }
     } else if (line.startsWith("SUB ") && g_mqtt_connected) {
         String topic = line.substring(4);
-        g_mqtt_client.subscribe(topic.c_str());
-        Serial.printf("<<OK SUB %s\n", topic.c_str());
+        if (topic.length() > BRIDGE_MAX_TOPIC_LEN) {
+            Serial.println(F("<<ERR topic too long"));
+        } else {
+            g_mqtt_client.subscribe(topic.c_str());
+            Serial.printf("<<OK SUB %s\n", topic.c_str());
+        }
     } else if (line == "INFO") {
         // 返回设备状态信息
         Serial.printf("<<INFO IP=%s RSSI=%d HEAP=%u UPTIME=%lu\n",
