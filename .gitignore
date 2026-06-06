@@ -4,3 +4,7 @@
 .vscode/
 *.pyc
 __pycache__/
+
+# Log files
+data/log.log
+*.log
