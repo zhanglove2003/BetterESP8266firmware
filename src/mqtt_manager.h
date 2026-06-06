@@ -20,8 +20,10 @@
  * 支持的命令：reboot（重启）、led_on（开灯）、led_off（关灯）
  */
 inline void mqtt_message_callback(char *topic, byte *payload, unsigned int length) {
-    char buf[128];
-    unsigned int len = length < 127 ? length : 127;
+    // 安全拷贝：限制到缓冲区大小减 1（预留 '\0'）
+    constexpr size_t BUF_SIZE = 128;
+    char buf[BUF_SIZE];
+    unsigned int len = (length < BUF_SIZE - 1) ? length : (BUF_SIZE - 1);
     memcpy(buf, payload, len);
     buf[len] = '\0';
     Serial.printf("<<MQTT %s %s\n", topic, buf);
