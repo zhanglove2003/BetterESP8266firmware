@@ -1,6 +1,6 @@
-[![Build](https://github.com/zhanglove2003/BetterESP8266devices/actions/workflows/build.yml/badge.svg)](https://github.com/zhanglove2003/BetterESP8266devices/actions/workflows/build.yml)
+[![Build](https://github.com/zhanglove2003/BetterESP8266firmware/actions/workflows/build.yml/badge.svg)](https://github.com/zhanglove2003/BetterESP8266firmware/actions/workflows/build.yml)
 
-# BetterESP8266devices
+# BetterESP8266firmware
 
 ESP8266 固件项目，实现 WiFi 连接、MQTT 通信与 STM32 串口桥接功能。
 
@@ -69,8 +69,8 @@ ESP8266 与 STM32 通过串口通信，使用以下命令格式：
 1. 安装 [PlatformIO](https://platformio.org/)
 2. 克隆仓库
    ```bash
-   git clone https://github.com/zhanglove2003/BetterESP8266devices.git
-   cd BetterESP8266devices
+   git clone https://github.com/zhanglove2003/BetterESP8266firmware.git
+   cd BetterESP8266firmware
    ```
 
 ### 构建与烧录
@@ -103,7 +103,7 @@ pio device monitor -b 115200
 ## 项目结构
 
 ```
-BetterESP8266devices/
+BetterESP8266firmware/
 ├── src/
 │   ├── config.h          # 硬件常量、EEPROM 布局、全局状态声明
 │   ├── serial_utils.h    # 串口输入工具（行读取、缓冲区清除）
