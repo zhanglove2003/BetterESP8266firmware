@@ -1,3 +1,5 @@
+[![Build](https://github.com/zhanglove2003/BetterESP8266devices/actions/workflows/build.yml/badge.svg)](https://github.com/zhanglove2003/BetterESP8266devices/actions/workflows/build.yml)
+
 # BetterESP8266devices
 
 ESP8266 固件项目，实现 WiFi 连接、MQTT 通信与 STM32 串口桥接功能。
