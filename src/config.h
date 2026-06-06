@@ -60,6 +60,9 @@ namespace EepromAddr {
 #define LED_BLINK_INTERVAL_MS      1000    // LED 闪烁间隔
 #define MENU_TIMEOUT_SEC            5       // 菜单自动选择超时
 #define BRIDGE_WAIT_NEXT_CHAR_MS    20      // 桥接协议第二字符等待
+#define BRIDGE_MAX_LINE_LEN         256     // 桥接协议单行最大长度
+#define BRIDGE_MAX_TOPIC_LEN        128     // 桥接 MQTT topic 最大长度
+#define BRIDGE_MAX_PAYLOAD_LEN       512     // 桥接 MQTT payload 最大长度
 
 // ═══════════════════════════════════════════════════════════
 // 全局状态（extern 声明，在 main.cpp 中定义）
