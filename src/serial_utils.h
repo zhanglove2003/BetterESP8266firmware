@@ -37,6 +37,7 @@ inline void serial_flush_input() {
 inline bool serial_read_line(char *buf, size_t max_len, uint32_t timeout_ms = 60000) {
     size_t idx = 0;
     uint32_t start = millis();
+    uint32_t last_char_ms = millis();  // 最后一次收到字符的时间
 
     while (idx < max_len - 1) {
         // 超时检查
@@ -46,8 +47,17 @@ inline bool serial_read_line(char *buf, size_t max_len, uint32_t timeout_ms = 60
             return false;
         }
 
+        // 空闲自动提交：1.5 秒无新输入且已有内容时自动结束
+        // 兼容不发送 \r\n 的串口终端（如 MobaXterm 普通回车）
+        if (idx > 0 && millis() - last_char_ms > 1500) {
+            buf[idx] = '\0';
+            Serial.println();
+            return true;
+        }
+
         if (Serial.available()) {
             char c = Serial.read();
+            last_char_ms = millis();  // 更新最后字符时间
 
             if (c == '\r') {
                 buf[idx] = '\0';
